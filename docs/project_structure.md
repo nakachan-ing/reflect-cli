@@ -1,91 +1,87 @@
-# Zettelkasten Reflect CLI - プロジェクト構造とモジュール設計方針
+# Reflect CLI - プロジェクトディレクトリ構造（v0.1）
 
-このドキュメントでは、Zettelkasten Reflect CLI における「JSON / SQLite 両対応の実装」を見据えた、プロジェクトディレクトリ構成とモジュール設計方針を整理する。
+このドキュメントでは、Reflect CLI プロジェクトにおける推奨ディレクトリ構成と各ディレクトリの役割について説明する。
 
 ---
 
-## ✅ 目的
-
-- バックエンド（JSON / SQLite）を切り替え可能にする
-- NoteStore インターフェースを中心に、依存逆転の原則に基づく柔軟な構成を実現する
-- 保守性・拡張性・テスト性を高める
-
-## 🗂️ 推奨ディレクトリ構造
+## 📁 ディレクトリ構成
 
 ```plaintext
 zk-reflect-cli/
-├── cmd/                  # CLIエントリポイント（cobra等）
-│   └── root.go
-├── store/                # データアクセス層（抽象＋実装）
-│   ├── store.go          # NoteStoreインターフェース定義
-│   ├── jsonstore/        # JSONによる実装
+├── cmd/                        # CLIエントリポイント（cobra用）
+│   ├── root.go
+│   ├── new.go
+│   ├── reflect.go
+│   └── structure.go
+│
+├── config/                     # 設定ファイル管理
+│   └── config.go               # .zkconfig.json など
+│
+├── internal/                   # Reflect CLI固有の内部処理
+│   ├── reflect/                # Reflectの中核処理（テンプレロード〜出力まで）
+│   │   └── engine.go
+│   ├── parser/                 # frontmatter / YAML / JSONパース
+│   │   └── frontmatter.go
+│   ├── render/                 # ノート構造のMarkdown出力ビルダ
+│   │   └── builder.go
+│   ├── validation/             # slug/title/tagsのチェック系
+│   │   └── validator.go
+│   └── fileutil/               # ファイルI/Oユーティリティ
+│       └── fs.go
+│
+├── model/                      # データ構造定義（Note, Tag など）
+│   ├── note.go
+│   ├── tag.go
+│   └── note_link.go
+│
+├── store/                      # 抽象的なデータストアと実装
+│   ├── store.go                # NoteStore インターフェース定義
+│   ├── jsonstore/              # JSONベースの永続化
 │   │   ├── json_store.go
 │   │   └── zettel.json
-│   └── sqlitestore/      # SQLiteによる実装
+│   └── sqlitestore/            # SQLiteベースの永続化
 │       ├── sqlite_store.go
 │       └── zk.db
-├── model/                # 構造体定義（Note, Tag など）
-│   └── note.go
-├── config/               # 設定ファイル読み込み
-│   └── config.go         # .zkconfig.json を扱う
-├── templates/            # Reflectテンプレート（YAML）
-│   └── idea.yaml
-├── utils/                # 汎用処理（slug生成など）
+│
+├── templates/                  # Reflectテンプレート（YAML定義）
+│   ├── ja/
+│   │   └── idea.yaml
+│   └── en/
+│       └── idea.yaml
+│
+├── utils/                      # 汎用関数（slug生成・日付整形など）
 │   └── slug.go
-├── docs/                # 設計ドキュメントなど
-│   └── project_structure.md
+│
+├── docs/                       # 設計ドキュメント・README補足
+│   ├── architecture.md
+│   ├── naming_strategy.md
+│   ├── reflect_link_direction.md
+│   ├── dev_strategy.md
+│   └── milestone_april_early.md
+│
 ├── go.mod
-└── main.go
-```
-
-## 🔁 実装切り替えの例（Go）
-```go
-func LoadStore(config Config) NoteStore {
-    switch config.Backend {
-    case "sqlite":
-        return sqlitestore.New(config)
-    case "json":
-        return jsonstore.New(config)
-    default:
-        return jsonstore.New(config)
-    }
-}
+└── main.go                     # CLIの起動ポイント
 ```
 
 ---
 
-## 🔃 依存関係の方向性（依存逆転）
+## ✅ 設計方針のポイント
 
-```plaintext
-CLIコマンド（cmd/）
-   ↓
-NoteStore インターフェース（store.Store）
-   ↓
-jsonstore/ or sqlitestore/（実装モジュール）
-```
-
-→ CLI本体は保存形式に依存しない構造となり、将来的な移行や差し替えが容易になります。
-
----
-
-## ✅ モジュール分離のメリット
-|項目|内容|
-|--|--|
-|柔軟性|JSON, SQLite を`config.Backend` で切り替え可能|
-|テスト性|モックを差し替えたCLIユニットテストが可能|
-|拡張性|将来的に REST API やクラウドストアにも対応しやすい|
-
-
-📌 今後の拡張候補
-
-- `store/reststore/`（REST APIベースの同期）
-- `store/cloudstore/`（S3やGCSへの保存）
-- `store/memstore/`（テスト専用のインメモリ実装）
+| ディレクトリ | 役割と狙い |
+|--------------|------------|
+| `cmd/`       | CLIのエントリーポイントとコマンド実装を分離しやすく保守性が高い構成 |
+| `internal/`  | Reflect CLI専用ロジックを外部から隠蔽し、安全に管理する（Goのinternal構造） |
+| `model/`     | 全体で使うデータ構造（Note, Tagなど）を一元管理 |
+| `store/`     | 永続化層の抽象化（NoteStore）と具体実装（JSON, SQLite）を分離 |
+| `templates/` | Reflect時のプロンプトテンプレートをローカライズ対応で分離 |
+| `config/`    | CLI設定情報の読み込み・切り替え管理 |
+| `utils/`     | 汎用処理の再利用（slug生成、ID発行など） |
+| `docs/`      | OSS開発やコントリビューター向けの設計ドキュメント群 |
 
 ---
 
-## ✅ 結論
+## 📌 補足
 
-- **バックエンドごとの実装は `store` 以下にモジュール化**
-- **CLIは `NoteStore` を介して抽象的に操作する**
-- **JSONからSQLiteへの移行・共存にも対応できる柔軟な構成を目指す**
+- この構成は `v0.1` の段階でのベース設計です。
+- 将来的に `test/`, `examples/`, `internal/api/` などの追加が考えられる。
+- コマンドが増えても `cmd/` 内に追加しやすく、拡張しやすい構造。
