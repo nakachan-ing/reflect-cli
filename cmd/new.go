@@ -4,8 +4,15 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
+	"log"
+
+	"github.com/nakachan-ing/reflect-cli/model"
 	"github.com/spf13/cobra"
 )
+
+// Argument variables
+var subType string
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
@@ -21,10 +28,20 @@ var newFleetingCmd = &cobra.Command{
 	Aliases: []string{"f"},
 	Run: func(cmd *cobra.Command, args []string) {
 		// ここにnew fleeting の処理を実装
+		validatedSubType, err := model.IsSubType(subType)
+		if err != nil {
+			log.Printf("[%s] is invalid type", err)
+		}
+
+		fmt.Println(validatedSubType)
 	},
 }
 
 func init() {
 	newCmd.AddCommand(newFleetingCmd)
 	rootCmd.AddCommand(newCmd)
+
+	// Options
+	newFleetingCmd.Flags().StringVarP(&subType, "type", "t", "", "Specify fleeting note type")
+	newFleetingCmd.MarkFlagRequired("type")
 }
