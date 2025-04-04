@@ -6,27 +6,20 @@
 
 ## 🧩 NoteType / SubType（カスタム型）
 
-ノートの分類に使用する列挙型を定義。
+ノートの分類を `map[SubType]bool` で定義。
 
 ```go
-type NoteType string
-
-const (
-    Fleeting  NoteType = "fleeting"
-    Permanent NoteType = "permanent"
-)
-
 type SubType string
 
-const (
-    Investigation SubType = "investigation"
-    Idea          SubType = "idea"
-    Question      SubType = "question"
-    Literature    SubType = "literature"
-    Quote         SubType = "quote"
-    Log           SubType = "log"
-    Reference     SubType = "reference"
-)
+var allowedSubType = map[subType]bool{
+	"investigation": true,
+	"idea":          true,
+	"question":      true,
+	"literature":    true,
+	"quote":         true,
+	"log":           true,
+	"reference":     true,
+}
 ```
 
 ---
@@ -39,7 +32,7 @@ Reflect CLIで扱うノートの基本単位。
 type Note struct {
     ID           string     `json:"id"` // yyyymmddhhmmss
     Title        string     `json:"title"`
-    NoteType     NoteType   `json:"note_type"`   // fleeting / permanent
+    NoteType     string   `json:"note_type"`   // fleeting / permanent
     SubType      SubType    `json:"sub_type"`    // idea, investigation など
     CreatedAt    *time.Time `json:"created_at"`
     UpdatedAt    *time.Time `json:"updated_at"`
