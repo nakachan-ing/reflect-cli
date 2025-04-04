@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/nakachan-ing/reflect-cli/model"
 	"github.com/spf13/cobra"
@@ -30,7 +29,8 @@ var newFleetingCmd = &cobra.Command{
 		// ここにnew fleeting の処理を実装
 		validatedSubType, err := model.IsSubType(subType)
 		if err != nil {
-			log.Printf("[%s] is invalid type", err)
+			fmt.Println("Error:", err)
+
 		}
 
 		fmt.Println(validatedSubType)

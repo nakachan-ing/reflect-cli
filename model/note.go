@@ -24,7 +24,7 @@ type Note struct {
 
 type SubType string
 
-var allowedSubType = map[SubType]bool{
+var AllowedSubType = map[SubType]bool{
 	"investigation": true,
 	"idea":          true,
 	"question":      true,
@@ -34,13 +34,49 @@ var allowedSubType = map[SubType]bool{
 	"reference":     true,
 }
 
+type subTypeInvalidError struct {
+	Message string
+}
+
+func (e *subTypeInvalidError) Error() string {
+	errorText := fmt.Sprintln("the allowed types are:") + "\n"
+	for subType := range AllowedSubType {
+		errorText += fmt.Sprintf("  ・%v\n", subType)
+	}
+	return errorText
+}
+
 func IsSubType(subTypeInput string) (SubType, error) {
 	subType := SubType(subTypeInput)
 
-	if !allowedSubType[subType] {
+	if !AllowedSubType[subType] {
 		// type is invalid の処理
-		return "", fmt.Errorf("[%v] is invalid type", subTypeInput)
+		subTypeInputInvalid := fmt.Sprintf("%v is invalid type\n", subTypeInput)
+		errorText := fmt.Sprintln("the allowed types are:") + "\n"
+		for subType := range AllowedSubType {
+			errorText += fmt.Sprintf("  ・%v\n", subType)
+		}
+		return "", &subTypeInvalidError{
+			Message: subTypeInputInvalid + errorText,
+		}
+		// return "", fmt.Errorf("%s is invalid type\n\n%s", subTypeInput, AllowedSubTypesStringList()) // AllowedSubTypesStringListを使った場合、こちらをreturn
+
 	} else {
 		return subType, nil
 	}
 }
+
+// 簡略化したい場合、こちらに切り替え
+// func AllowedSubTypesStringList() string {
+// 	var keys []string
+// 	for k := range AllowedSubType {
+// 		keys = append(keys, string(k))
+// 	}
+// 	sort.Strings(keys)
+
+// 	msg := "the allowed types are:\n"
+// 	for _, k := range keys {
+// 		msg += fmt.Sprintf("  ・%s\n", k)
+// 	}
+// 	return msg
+// }
