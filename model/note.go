@@ -39,11 +39,12 @@ type subTypeInvalidError struct {
 }
 
 func (e *subTypeInvalidError) Error() string {
-	errorText := fmt.Sprintln("the allowed types are:") + "\n"
+	errorMsg := fmt.Sprintln("Type is invalid")
+	errorMsg += fmt.Sprintln("Allowed types:")
 	for subType := range AllowedSubType {
-		errorText += fmt.Sprintf("  ・%v\n", subType)
+		errorMsg += fmt.Sprintf("  ・%v\n", subType)
 	}
-	return errorText
+	return errorMsg
 }
 
 func IsSubType(subTypeInput string) (SubType, error) {
@@ -51,13 +52,13 @@ func IsSubType(subTypeInput string) (SubType, error) {
 
 	if !AllowedSubType[subType] {
 		// type is invalid の処理
-		subTypeInputInvalid := fmt.Sprintf("%v is invalid type\n", subTypeInput)
-		errorText := fmt.Sprintln("the allowed types are:") + "\n"
+		errorMsg := fmt.Sprintln("Type is invalid")
+		errorMsg += fmt.Sprintln("Allowed types:")
 		for subType := range AllowedSubType {
-			errorText += fmt.Sprintf("  ・%v\n", subType)
+			errorMsg += fmt.Sprintf("  ・%v\n", subType)
 		}
 		return "", &subTypeInvalidError{
-			Message: subTypeInputInvalid + errorText,
+			Message: errorMsg,
 		}
 		// return "", fmt.Errorf("%s is invalid type\n\n%s", subTypeInput, AllowedSubTypesStringList()) // AllowedSubTypesStringListを使った場合、こちらをreturn
 
@@ -74,7 +75,7 @@ func IsSubType(subTypeInput string) (SubType, error) {
 // 	}
 // 	sort.Strings(keys)
 
-// 	msg := "the allowed types are:\n"
+// 	msg := "Allowed types:\n"
 // 	for _, k := range keys {
 // 		msg += fmt.Sprintf("  ・%s\n", k)
 // 	}
