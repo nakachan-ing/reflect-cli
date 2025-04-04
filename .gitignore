@@ -1,0 +1,19 @@
+# Goのビルドファイル
+/reflect-cli
+*.exe
+*.out
+reflect
+reflect-mac
+reflect-linux
+
+# 依存関係キャッシュ
+/vendor/
+go.sum
+
+# エディタやOSのファイル
+.vscode/
+.idea/
+.DS_Store
+
+# Docker関連のファイル（キャッシュなど）
+/tmp/
