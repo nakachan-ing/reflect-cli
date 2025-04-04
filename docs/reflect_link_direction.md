@@ -1,57 +1,69 @@
-# Zettelkasten Reflect CLI - Reflectリンクの方向性と設計方針
+# Reflect CLI - ノートリンクにおける片方向と双方向の使い分け方針
 
-このドキュメントでは、Zettelkasten Reflect CLI における Fleeting ノートと Permanent ノート間のリンク（Reflect）に関する設計方針を整理する。
-
----
-
-## ✅ 背景：Reflectにおけるリンクの方向性
-
-Reflect CLIでは、fleeting ノートを元に permanent ノートを生成（Reflect）する。  
-このとき、**どちらのノートにどのようなリンク情報を持たせるか** が設計上の論点である。
+このドキュメントでは、Reflect CLI におけるノート間リンク（linked_notesなど）の設計において、片方向リンクと双方向リンクの使い分け方針を整理する。
 
 ---
 
-## 🔄 想定されるリンク方向
+## ✅ 用語定義
 
-| ノート種類 | リンク項目 | 説明 |
-|------------|------------|------|
-| Permanent  | `linked_note` | Reflect元となった Fleetingノートへのリンク（必須） |
-| Fleeting   | `reflected_by` | Reflectで生成された Permanentノートへのリンク（任意） |
-
----
-
-## ✅ `reflected_by` をFleetingに記録するメリット
-
-- `zk list --reflectable` などで Reflect済みかどうかを判定しやすくなる
-- どの Permanent に反映されたか後からたどりやすい
-- Reflect済みかどうかを明示するフラグとしても使える
+| 用語 | 説明 |
+|------|------|
+| 片方向リンク | ノートAからノートBへの一方通行リンク。ノートBにはノートAの情報なし。 |
+| 双方向リンク | ノートAとノートBがお互いをリンクし合う。|
 
 ---
 
-## 💭 しかし記録しない場合の利点もある
+## 🔄 それぞれの長所と短所
 
-- 1つの Fleeting から複数の Permanent が生まれるケース（split）に柔軟に対応
-- Reflect後の Permanent が削除・再生成されたときの整合性を考えなくて済む
-- CLIの処理がシンプルになる（双方向リンクの更新が不要）
+| 観点 | 片方向リンク | 双方向リンク |
+|------|---------------|----------------|
+| 実装のシンプルさ | ✅ 書き込み先が1つで済む | ⛔️ 両方のファイル編集が必要 |
+| Reflect追跡性 | ⛔️ reflected_by がなければ追えない | ✅ 双方向ならどちらからも辿れる |
+| Reflectの分岐対応 | ✅ 複数Reflectが許容しやすい | ⛔️ 一対多の管理が煩雑になることも |
+| fleeting → fleeting の関係 | ⛔️ 派生元が見えづらい | ✅ 調査や問いの連鎖を明示できる |
+| 思考ネットワーク表示 | ⭕️ 有向グラフで十分 | ✅ 無向グラフも視覚的に自然 |
 
 ---
 
-## 🧭 Reflect CLIとしての推奨設計（v0.1時点）
+## 🧩 Reflect CLIでのリンク方針まとめ
 
-| 方針項目 | 内容 |
-|----------|------|
-| Reflectリンクの方向性 | Permanentノートにだけ `linked_note` を記録 |
-| Fleeting側のリンク | `reflected_by` は記録しない（将来的な拡張候補） |
-| Reflect済み判定方法 | Permanentノートの `linked_note` を解析して判断 |
-| 将来的な拡張 | `zk reflect --update-source` で Fleeting 側にも記録可能にする余地を残す |
+| リンクの関係 | 記録場所 | 推奨方向性 | 理由 |
+|---------------|------------|------------------|------|
+| fleeting → permanent | permanent側の `linked_notes` | ✅ 片方向 | 複数Reflectを許容するため。元ノートを編集せずに済む |
+| fleeting → fleeting | 双方の `linked_notes` / `linked_by` | ✅ 双方向（推奨） | 思考の連鎖・分岐を明示化するため |
+| permanent → permanent | 双方の `linked_notes` | ✅ 双方向（推奨） | 知識の構造化や索引ノートの形成に役立つ |
+
+---
+
+## ✨ 実装例
+
+### 例：`permanent` が `fleeting` を参照
+
+```yaml
+# permanentのfrontmatter
+linked_notes:
+  - 20250402T1030_gc調査.md
+```
+
+### 例：`fleeting` が `fleeting` を参照
+
+```yaml
+# ノートA
+linked_notes:
+  - 20250402T1200_次の仮説.md
+
+# ノートB
+linked_by:
+  - 20250402T1030_gc調査.md
+```
 
 ---
 
 ## ✅ 結論
 
-Reflect CLI は、「思考の昇華」に集中したシンプルな設計を目指す。  
-そのため、**Reflectリンクは片方向（Permanent → Fleeting）に限定**することで、初期実装の柔軟性・簡潔性を保つ。
+Reflect CLIでは、**リンクの目的に応じて片方向／双方向を適切に使い分ける設計が最適**。
 
-- フル双方向リンクは将来的にニーズが明確になった段階で対応を検討する。
-- Reflectの非線形性（1:n, 再Reflectなど）にも柔軟に対応できる構造を維持する。
+- Reflect（昇華）は片方向リンクでシンプルに
+- 思考の連鎖（fleeting間）や知識構造（permanent間）は双方向で育てる
 
+この方針に基づき、CLI機能・frontmatter構造・構造可視化（zk structure）を整備していく。
