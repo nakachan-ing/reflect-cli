@@ -39,12 +39,15 @@ type subTypeInvalidError struct {
 }
 
 func (e *subTypeInvalidError) Error() string {
-	errorMsg := fmt.Sprintln("Type is invalid")
-	errorMsg += fmt.Sprintln("Allowed types:")
-	for subType := range AllowedSubType {
-		errorMsg += fmt.Sprintf("  ・%v\n", subType)
-	}
-	return errorMsg
+	return e.Message
+}
+
+type sourceUnspecifiedError struct {
+	Message string
+}
+
+func (e *sourceUnspecifiedError) Error() string {
+	return e.Message
 }
 
 func IsSubType(subTypeInput string) (SubType, error) {
@@ -65,6 +68,18 @@ func IsSubType(subTypeInput string) (SubType, error) {
 	} else {
 		return subType, nil
 	}
+}
+
+func IsSourceSpecified(subType SubType, source string) error {
+	if subType == SubType("literature") {
+		if source == "" {
+			errorMsg := fmt.Sprintln("Source is required when type is literature")
+			return &sourceUnspecifiedError{
+				Message: errorMsg,
+			}
+		}
+	}
+	return nil
 }
 
 // 簡略化したい場合、こちらに切り替え

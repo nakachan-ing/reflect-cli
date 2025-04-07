@@ -15,6 +15,7 @@ import (
 var subType string
 var title string
 var tags []string
+var source string
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
@@ -33,7 +34,6 @@ var newFleetingCmd = &cobra.Command{
 		validatedSubType, err := model.IsSubType(subType)
 		if err != nil {
 			fmt.Println("Error:", err)
-
 		}
 		fmt.Println(validatedSubType)
 
@@ -45,7 +45,21 @@ var newFleetingCmd = &cobra.Command{
 		}
 		fmt.Println(slug)
 
-		fmt.Println(tags)
+		// ここにTagのバリデーションを実装
+		// fmt.Println(tags)
+		validatedTags, err := model.ValidateTags(tags)
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+		fmt.Println(validatedTags)
+
+		// ここにsourceのバリデーションを実装
+		// --typeがliteratureの場合は、必須項目
+		// それ以外の場合は、任意項目
+		if err = model.IsSourceSpecified(validatedSubType, source); err != nil {
+			fmt.Println("Error:", err)
+		}
+		fmt.Println(source)
 
 	},
 }
@@ -59,4 +73,5 @@ func init() {
 	newFleetingCmd.MarkFlagRequired("type")
 	newFleetingCmd.Flags().StringVar(&title, "title", "", "Specify fleeting note title")
 	newFleetingCmd.Flags().StringSliceVar(&tags, "tags", []string{}, "Specify tags")
+	newFleetingCmd.Flags().StringVarP(&source, "source", "s", "", "Specify literature source")
 }
