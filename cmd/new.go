@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/nakachan-ing/reflect-cli/model"
 	"github.com/nakachan-ing/reflect-cli/utils"
@@ -16,6 +17,7 @@ var subType string
 var title string
 var tags []string
 var source string
+var issue string
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
@@ -34,6 +36,7 @@ var newFleetingCmd = &cobra.Command{
 		validatedSubType, err := model.IsSubType(subType)
 		if err != nil {
 			fmt.Println("Error:", err)
+			os.Exit(2)
 		}
 		fmt.Println(validatedSubType)
 
@@ -58,8 +61,16 @@ var newFleetingCmd = &cobra.Command{
 		// それ以外の場合は、任意項目
 		if err = model.IsSourceSpecified(validatedSubType, source); err != nil {
 			fmt.Println("Error:", err)
+			os.Exit(2)
 		}
 		fmt.Println(source)
+
+		// ここにissueのバリデーションを実装
+		validatedIssue, warning := utils.ValidateIssueURL(issue)
+		if warning != "" {
+			fmt.Println("Warning:", warning)
+		}
+		fmt.Println(validatedIssue)
 
 	},
 }
@@ -74,4 +85,5 @@ func init() {
 	newFleetingCmd.Flags().StringVar(&title, "title", "", "Specify fleeting note title")
 	newFleetingCmd.Flags().StringSliceVar(&tags, "tags", []string{}, "Specify tags")
 	newFleetingCmd.Flags().StringVarP(&source, "source", "s", "", "Specify literature source")
+	newFleetingCmd.Flags().StringVarP(&issue, "issue", "i", "", "Specify related issue")
 }
