@@ -72,6 +72,34 @@ var newFleetingCmd = &cobra.Command{
 		}
 		fmt.Println(validatedIssue)
 
+		newTags := model.MapTags(validatedTags)
+		newNote := model.MapNote(title, subType, slug, source, issue, newTags)
+
+		// debug
+		fmt.Println(newNote)
+		fmt.Println("ID:", newNote.ID)
+		fmt.Println("NoteType:", newNote.NoteType)
+		fmt.Println("SubType:", newNote.SubType)
+		fmt.Println("CreatedAt:", newNote.CreatedAt)
+		fmt.Println("UpdatedAt:", newNote.UpdatedAt)
+		fmt.Println("Archived:", newNote.Archived)
+		fmt.Println("Deleted:", newNote.Deleted)
+		fmt.Println("Reflected:", newNote.Reflected)
+		fmt.Println("FilePath:", newNote.FilePath)
+		fmt.Println("Slug:", newNote.Slug)
+		fmt.Println("Source:", newNote.Source)
+		fmt.Println("LinkedIssue:", newNote.LinkedIssue)
+		fmt.Println("LinkedNotes:", newNote.LinkedNotes)
+		fmt.Println("Tags:")
+		for _, tag := range newNote.Tags {
+			fmt.Printf("  %v\n", tag.Name)
+		}
+
+		frontMatterBytes, err := model.MapFrontMatter(title, subType, source, issue, validatedTags)
+		if err != nil {
+			fmt.Println("Error:", err)
+		}
+		fmt.Println(string(frontMatterBytes))
 	},
 }
 
