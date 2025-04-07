@@ -19,7 +19,7 @@ type Note struct {
 	Slug        string     `json:"slug"`      // タイトル由来のファイル名用slug
 	LinkedIssue string     `json:"linked_issue"`
 	LinkedNotes []*Note    `json:"linked_notes,omitempty"` // 関連ノート（自己参照）
-	// Tags        []*Tag     `json:"tags,omitempty"`         // タグ一覧
+	Tags        []*Tag     `json:"tags,omitempty"`         // タグ一覧
 }
 
 type SubType string

@@ -14,6 +14,7 @@ import (
 // Argument variables
 var subType string
 var title string
+var tags []string
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
@@ -44,6 +45,8 @@ var newFleetingCmd = &cobra.Command{
 		}
 		fmt.Println(slug)
 
+		fmt.Println(tags)
+
 	},
 }
 
@@ -55,4 +58,5 @@ func init() {
 	newFleetingCmd.Flags().StringVarP(&subType, "type", "t", "", "Specify fleeting note type")
 	newFleetingCmd.MarkFlagRequired("type")
 	newFleetingCmd.Flags().StringVar(&title, "title", "", "Specify fleeting note title")
+	newFleetingCmd.Flags().StringSliceVar(&tags, "tags", []string{}, "Specify tags")
 }
