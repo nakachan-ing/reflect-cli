@@ -5,8 +5,14 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/nakachan-ing/reflect-cli/config"
+	"github.com/nakachan-ing/reflect-cli/internal/noteio"
+	"github.com/nakachan-ing/reflect-cli/internal/templateio"
 	"github.com/nakachan-ing/reflect-cli/model"
 	"github.com/nakachan-ing/reflect-cli/utils"
 	"github.com/spf13/cobra"
@@ -32,74 +38,108 @@ var newFleetingCmd = &cobra.Command{
 	// Args:    cobra.ExactArgs(1), 今後の引数による
 	Aliases: []string{"f"},
 	Run: func(cmd *cobra.Command, args []string) {
+		// ここでconfigを読み込む
+		config, err := config.LoadConfig()
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+			os.Exit(1)
+		}
+
 		// ここにnew fleeting の処理を実装
 		validatedSubType, err := model.IsSubType(subType)
 		if err != nil {
-			fmt.Println("Error:", err)
+			log.Printf("Error: %v\n", err)
 			os.Exit(2)
 		}
-		fmt.Println(validatedSubType)
+		// fmt.Println(validatedSubType)
 
 		// ここにtitleのバリデーションを実装
 		slug, err := utils.Slugify(title)
 		if err != nil {
 			// slugがなくてもファイル作成できるように Warningのみにしておく
-			fmt.Println("Warning:", err)
+			log.Printf("Warning: %v\n", err)
 		}
-		fmt.Println(slug)
+		// fmt.Println(slug)
 
 		// ここにTagのバリデーションを実装
 		// fmt.Println(tags)
 		validatedTags, err := model.ValidateTags(tags)
 		if err != nil {
-			fmt.Println("Error:", err)
+			log.Printf("Error: %v\n", err)
 		}
-		fmt.Println(validatedTags)
+		// fmt.Println(validatedTags)
 
 		// ここにsourceのバリデーションを実装
 		// --typeがliteratureの場合は、必須項目
 		// それ以外の場合は、任意項目
 		if err = model.IsSourceSpecified(validatedSubType, source); err != nil {
-			fmt.Println("Error:", err)
+			log.Printf("Error: %v\n", err)
 			os.Exit(2)
 		}
-		fmt.Println(source)
+		// fmt.Println(source)
 
 		// ここにissueのバリデーションを実装
 		validatedIssue, warning := utils.ValidateIssueURL(issue)
 		if warning != "" {
-			fmt.Println("Warning:", warning)
+			log.Printf("Warning: %v\n", warning)
 		}
 		fmt.Println(validatedIssue)
 
 		newTags := model.MapTags(validatedTags)
-		newNote := model.MapNote(title, subType, slug, source, issue, newTags)
+		newNote := model.MapNote(title, subType, slug, source, validatedIssue, newTags)
 
 		// debug
-		fmt.Println(newNote)
-		fmt.Println("ID:", newNote.ID)
-		fmt.Println("NoteType:", newNote.NoteType)
-		fmt.Println("SubType:", newNote.SubType)
-		fmt.Println("CreatedAt:", newNote.CreatedAt)
-		fmt.Println("UpdatedAt:", newNote.UpdatedAt)
-		fmt.Println("Archived:", newNote.Archived)
-		fmt.Println("Deleted:", newNote.Deleted)
-		fmt.Println("Reflected:", newNote.Reflected)
-		fmt.Println("FilePath:", newNote.FilePath)
-		fmt.Println("Slug:", newNote.Slug)
-		fmt.Println("Source:", newNote.Source)
-		fmt.Println("LinkedIssue:", newNote.LinkedIssue)
-		fmt.Println("LinkedNotes:", newNote.LinkedNotes)
-		fmt.Println("Tags:")
-		for _, tag := range newNote.Tags {
-			fmt.Printf("  %v\n", tag.Name)
+		// fmt.Println(newNote)
+		// fmt.Println("ID:", newNote.ID)
+		// fmt.Println("NoteType:", newNote.NoteType)
+		// fmt.Println("SubType:", newNote.SubType)
+		// fmt.Println("CreatedAt:", newNote.CreatedAt)
+		// fmt.Println("UpdatedAt:", newNote.UpdatedAt)
+		// fmt.Println("Archived:", newNote.Archived)
+		// fmt.Println("Deleted:", newNote.Deleted)
+		// fmt.Println("Reflected:", newNote.Reflected)
+		// fmt.Println("FilePath:", newNote.FilePath)
+		// fmt.Println("Slug:", newNote.Slug)
+		// fmt.Println("Source:", newNote.Source)
+		// fmt.Println("LinkedIssue:", newNote.LinkedIssue)
+		// fmt.Println("LinkedNotes:", newNote.LinkedNotes)
+		// fmt.Println("Tags:")
+		// for _, tag := range newNote.Tags {
+		// 	fmt.Printf("  %v\n", tag.Name)
+		// }
+
+		frontMatterBytes, err := model.MapFrontMatter(title, subType, source, validatedIssue, validatedTags)
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+		}
+		// fmt.Println(string(frontMatterBytes))
+
+		// fileに書き出し
+		fleetingTempletePath := filepath.Join(config.TemplateDir, "fleeting", config.Language, fmt.Sprintf("%s.md", newNote.SubType))
+		templateContent, err := templateio.LoadFleetingTemplate(fleetingTempletePath)
+		if err != nil {
+			log.Printf("Error: %v\n", err)
 		}
 
-		frontMatterBytes, err := model.MapFrontMatter(title, subType, source, issue, validatedTags)
+		filePath, err := noteio.WriteNoteFile(newNote, string(frontMatterBytes), templateContent, *config)
 		if err != nil {
-			fmt.Println("Error:", err)
+			log.Printf("Error: %v\n", err)
 		}
-		fmt.Println(string(frontMatterBytes))
+
+		fmt.Printf("✅ Created new fleeting note: %s\n", filepath.Base(filePath))
+		fmt.Printf("📁 Path: %s\n", filePath)
+
+		if len(newNote.Tags) > 0 {
+			var tagNames []string
+			for _, t := range newNote.Tags {
+				tagNames = append(tagNames, t.Name)
+			}
+			fmt.Printf("🏷️ Tags: %s\n", strings.Join(tagNames, ", "))
+		}
+
+		if newNote.LinkedIssue != "" {
+			fmt.Printf("🔗 Linked Issue: %s\n", newNote.LinkedIssue)
+		}
 	},
 }
 

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"fmt"
+	"log"
 	"regexp"
 	"strings"
 )
@@ -28,7 +28,7 @@ func ValidateTags(tags []string) ([]string, error) {
 	}
 
 	if len(invalid) > 0 {
-		fmt.Printf("Warning: Some tags were invalid and skipped: %v\n", invalid)
+		log.Printf("Warning: Some tags were invalid and skipped: %v\n", invalid)
 	}
 
 	// 今は、常にerrorでnilを返すが、今後、error実装検討

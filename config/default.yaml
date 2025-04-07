@@ -1,0 +1,3 @@
+baseDir : ~/zettel-notes
+templateDir: ~/zettel-templates
+language: ja # or en
