@@ -16,6 +16,7 @@ type Note struct {
 	Reflected   bool       `json:"reflected"`
 	FilePath    string     `json:"file_path"` // Markdownファイルのパス
 	Slug        string     `json:"slug"`      // タイトル由来のファイル名用slug
+	Source      string     `json:"source"`
 	LinkedIssue string     `json:"linked_issue"`
 	LinkedNotes []*Note    `json:"linked_notes,omitempty"` // 関連ノート（自己参照）
 	Tags        []*Tag     `json:"tags,omitempty"`         // タグ一覧
