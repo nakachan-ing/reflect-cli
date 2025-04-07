@@ -7,11 +7,13 @@ import (
 	"fmt"
 
 	"github.com/nakachan-ing/reflect-cli/model"
+	"github.com/nakachan-ing/reflect-cli/utils"
 	"github.com/spf13/cobra"
 )
 
 // Argument variables
 var subType string
+var title string
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
@@ -32,8 +34,16 @@ var newFleetingCmd = &cobra.Command{
 			fmt.Println("Error:", err)
 
 		}
-
 		fmt.Println(validatedSubType)
+
+		// ここにtitleのバリデーションを実装
+		slug, err := utils.Slugify(title)
+		if err != nil {
+			// slugがなくてもファイル作成できるように Warningのみにしておく
+			fmt.Println("Warning:", err)
+		}
+		fmt.Println(slug)
+
 	},
 }
 
@@ -44,4 +54,5 @@ func init() {
 	// Options
 	newFleetingCmd.Flags().StringVarP(&subType, "type", "t", "", "Specify fleeting note type")
 	newFleetingCmd.MarkFlagRequired("type")
+	newFleetingCmd.Flags().StringVar(&title, "title", "", "Specify fleeting note title")
 }
