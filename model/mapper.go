@@ -49,6 +49,17 @@ func MapTags(strTags []string) []*Tag {
 	return tags
 }
 
+func MapTag(strTag string) Tag {
+	createAt := time.Now()
+	tag := Tag{
+		ID:        "",
+		Name:      strTag,
+		CreatedAt: &createAt,
+		Deleted:   false,
+	}
+	return tag
+}
+
 func MapFrontMatter(title, subType, source, issue string, tags []string) ([]byte, error) {
 	t := time.Now()
 	formattedTime := t.Format("2006-01-02T15:04:05")

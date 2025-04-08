@@ -4,7 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -87,7 +86,13 @@ var newFleetingCmd = &cobra.Command{
 		}
 		fmt.Println(validatedIssue)
 
-		newTags := model.MapTags(validatedTags)
+		// newTags := model.MapTags(validatedTags)
+		var newTags []*model.Tag
+		for _, strTag := range validatedTags {
+			tag := model.MapTag(strTag)
+			newTags = append(newTags, &tag)
+		}
+
 		newNote := model.MapNote(title, subType, slug, source, validatedIssue, newTags)
 
 		// debug
@@ -146,26 +151,17 @@ var newFleetingCmd = &cobra.Command{
 		// Jsonにデータ追加
 		newNote.FilePath = filePath
 		if err = jsonstore.InsertNoteToJson(newNote, config); err != nil {
+			utils.HandleZettelJsonError(err)
+		}
+
+		for _, newTag := range newTags {
+			existTags, err := jsonstore.LoadTags(*config)
 			if err != nil {
-				var notExistErr *jsonstore.ZettelJsonNotExistError
-				var parseErr *jsonstore.ZettelJsonParseError
-				var readErr *jsonstore.ZettelJsonReadError
-
-				switch {
-				case errors.As(err, &notExistErr):
-					log.Printf("Error: %s", notExistErr)
-					os.Exit(1)
-				case errors.As(err, &parseErr):
-					log.Printf("Error: %s", parseErr)
-					os.Exit(1)
-				case errors.As(err, &readErr):
-					log.Printf("Error: %s", readErr)
-					os.Exit(1)
-				default:
-					log.Printf("Error: %v", err)
-				}
+				log.Printf("Error: %s", err)
 			}
-
+			if err = jsonstore.InsertTagToJson(existTags, *newTag, config); err != nil {
+				utils.HandleZettelJsonError(err)
+			}
 		}
 		///////////////////////////////////
 

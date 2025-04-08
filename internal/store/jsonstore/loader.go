@@ -96,3 +96,30 @@ func LoadNotes(config model.Config) ([]model.Note, error) {
 
 	return notes, nil
 }
+
+func LoadTags(config model.Config) ([]model.Tag, error) {
+	tagsJsonPath := config.TagsJsonPath
+
+	// ディレクトリがない場合は作成
+	if err := os.MkdirAll(filepath.Dir(tagsJsonPath), 0755); err != nil {
+		return nil, fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// notes.json が存在しない場合、空の JSON 配列 `[]` で初期化
+	if _, err := os.Stat(tagsJsonPath); os.IsNotExist(err) {
+		if err := os.WriteFile(tagsJsonPath, []byte("[]"), 0644); err != nil {
+			return nil, fmt.Errorf("failed to create tags.json file: %w", err)
+		}
+	} else if err != nil {
+		// ファイルの存在確認時の別のエラー（例: 権限エラー）
+		return nil, fmt.Errorf("failed to check tags.json: %w", err)
+	}
+
+	// JSON をロード
+	var tags []model.Tag
+	if err := LoadJson(tagsJsonPath, &tags); err != nil {
+		return nil, fmt.Errorf("error loading tags from JSON: %w", err)
+	}
+
+	return tags, nil
+}
