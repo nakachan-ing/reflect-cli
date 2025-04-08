@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/nakachan-ing/reflect-cli/config"
 	"github.com/nakachan-ing/reflect-cli/internal/noteio"
+	"github.com/nakachan-ing/reflect-cli/internal/store/jsonstore"
 	"github.com/nakachan-ing/reflect-cli/internal/templateio"
 	"github.com/nakachan-ing/reflect-cli/model"
 	"github.com/nakachan-ing/reflect-cli/utils"
@@ -140,6 +142,48 @@ var newFleetingCmd = &cobra.Command{
 		if newNote.LinkedIssue != "" {
 			fmt.Printf("🔗 Linked Issue: %s\n", newNote.LinkedIssue)
 		}
+
+		// Jsonにデータ追加
+		newNote.FilePath = filePath
+		if err = jsonstore.InsertNoteToJson(newNote, config); err != nil {
+			if err != nil {
+				var notExistErr *jsonstore.ZettelJsonNotExistError
+				var parseErr *jsonstore.ZettelJsonParseError
+				var readErr *jsonstore.ZettelJsonReadError
+
+				switch {
+				case errors.As(err, &notExistErr):
+					log.Printf("Error: %s", notExistErr)
+					os.Exit(1)
+				case errors.As(err, &parseErr):
+					log.Printf("Error: %s", parseErr)
+					os.Exit(1)
+				case errors.As(err, &readErr):
+					log.Printf("Error: %s", readErr)
+					os.Exit(1)
+				default:
+					log.Printf("Error: %v", err)
+				}
+			}
+
+		}
+		///////////////////////////////////
+
+		// ノートを開く
+		//////////////////////////////////
+
+		// ノート編集後の情報に更新する
+		noteID := newNote.ID
+		updatedNotes, err := jsonstore.UpdateNotes(filePath, noteID, config)
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+		}
+
+		err = jsonstore.SaveUpdatedJson(updatedNotes, config.ZettelJsonPath)
+		if err != nil {
+			log.Printf("Error: %v\n", err)
+		}
+		//////////////////////////////////
 	},
 }
 
