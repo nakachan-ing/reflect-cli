@@ -25,6 +25,7 @@ var title string
 var tags []string
 var source string
 var issue string
+var language string
 
 // newCmd represents the new command
 var newCmd = &cobra.Command{
@@ -36,6 +37,7 @@ var newCmd = &cobra.Command{
 var newFleetingCmd = &cobra.Command{
 	Use:   "fleeting [title]",
 	Short: "Add a new fleeting note",
+	Args:  cobra.ArbitraryArgs,
 	// Args:    cobra.ExactArgs(1), 今後の引数による
 	Aliases: []string{"f"},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -84,7 +86,7 @@ var newFleetingCmd = &cobra.Command{
 		if warning != "" {
 			log.Printf("Warning: %v\n", warning)
 		}
-		fmt.Println(validatedIssue)
+		// fmt.Println(validatedIssue)
 
 		// newTags := model.MapTags(validatedTags)
 		var newTags []*model.Tag
@@ -122,7 +124,14 @@ var newFleetingCmd = &cobra.Command{
 		// fmt.Println(string(frontMatterBytes))
 
 		// fileに書き出し
-		fleetingTempletePath := filepath.Join(config.TemplateDir, "fleeting", config.Language, fmt.Sprintf("%s.md", newNote.SubType))
+		var fleetingTempletePath string
+		fmt.Println(language)
+		if language == "" {
+			fleetingTempletePath = filepath.Join(config.TemplateDir, "fleeting", config.Language, fmt.Sprintf("%s.md", newNote.SubType))
+		} else {
+			fleetingTempletePath = filepath.Join(config.TemplateDir, "fleeting", language, fmt.Sprintf("%s.md", newNote.SubType))
+		}
+
 		templateContent, err := templateio.LoadFleetingTemplate(fleetingTempletePath)
 		if err != nil {
 			log.Printf("Error: %v\n", err)
@@ -194,4 +203,5 @@ func init() {
 	newFleetingCmd.Flags().StringSliceVar(&tags, "tags", []string{}, "Specify tags")
 	newFleetingCmd.Flags().StringVarP(&source, "source", "s", "", "Specify literature source")
 	newFleetingCmd.Flags().StringVarP(&issue, "issue", "i", "", "Specify related issue")
+	newFleetingCmd.Flags().StringVar(&language, "lang", "", "Specify language (e.g. ja, en)")
 }

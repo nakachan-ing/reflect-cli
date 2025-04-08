@@ -66,6 +66,6 @@ func SaveUpdatedJson[T any](v []T, jsonPath string) error {
 		return fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
-	fmt.Printf("✅ Successfully updated JSON file: %s", jsonPath)
+	fmt.Printf("✅ Successfully updated JSON file: %s\n", jsonPath)
 	return nil
 }
