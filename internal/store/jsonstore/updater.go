@@ -12,15 +12,20 @@ import (
 )
 
 func UpdateNotes(filePath, noteID string, config *model.Config) ([]model.Note, error) {
-	mdContent, err := os.ReadFile(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read Markdown file: %w", err)
-	}
+	// mdContent, err := os.ReadFile(filePath)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to read Markdown file: %w", err)
+	// }
 
-	frontMatter, body, err := noteio.ParseFrontMatter[model.FrontMatter](string(mdContent))
+	// frontMatter, body, err := noteio.ParseFrontMatter[model.FrontMatter](string(mdContent))
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to parse front matter for %s: %v", filePath, err)
+	// 	// body = string(mdContent) // フロントマターの解析に失敗した場合、全文をセット
+	// }
+
+	frontMatter, body, err := noteio.ParseNoteFile[model.FrontMatter](filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse front matter for %s: %v", filePath, err)
-		// body = string(mdContent) // フロントマターの解析に失敗した場合、全文をセット
+		return nil, fmt.Errorf("failed to parse front note file for %s: %v", filePath, err)
 	}
 
 	updatedNotes, err := LoadNotes(*config)
