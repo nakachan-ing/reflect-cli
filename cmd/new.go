@@ -117,7 +117,7 @@ var newFleetingCmd = &cobra.Command{
 		// 	fmt.Printf("  %v\n", tag.Name)
 		// }
 
-		frontMatterBytes, err := model.MapFrontMatter(title, subType, source, validatedIssue, validatedTags)
+		frontMatterBytes, err := model.MapFrontMatter(newNote.Title, newNote.NoteType, string(newNote.SubType), newNote.Source, validatedIssue, validatedTags, "")
 		if err != nil {
 			log.Printf("Error: %v\n", err)
 		}

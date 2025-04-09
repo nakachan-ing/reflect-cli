@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -60,13 +61,13 @@ func MapTag(strTag string) Tag {
 	return tag
 }
 
-func MapFrontMatter(title, subType, source, issue string, tags []string) ([]byte, error) {
+func MapFrontMatter(title, noteType, subType, source, issue string, tags []string, fileName string) ([]byte, error) {
 	t := time.Now()
 	formattedTime := t.Format("2006-01-02T15:04:05")
 
 	frontMatter := FrontMatter{
 		Title:       title,
-		NoteType:    "fleeting",
+		NoteType:    noteType,
 		SubType:     subType,
 		CreatedAt:   formattedTime,
 		UpdatedAt:   formattedTime,
@@ -76,9 +77,35 @@ func MapFrontMatter(title, subType, source, issue string, tags []string) ([]byte
 		LinkedNotes: []string{},
 		Tags:        tags,
 	}
+	if noteType == "permanent" {
+		frontMatter.Reflected = true
+		var linkedNotes []string
+		linkedNotes = append(linkedNotes, fmt.Sprintf("[[%s]]", filepath.Join("..", "fleeting", fileName)))
+		frontMatter.LinkedNotes = linkedNotes
+	}
+
 	frontMatterBytes, err := yaml.Marshal(frontMatter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert to YAML: %w", err)
 	}
 	return frontMatterBytes, nil
+}
+
+func MapReflectToPermanent(title, subType, slug string, responses []string, config *Config) Note {
+	t := time.Now()
+	id := fmt.Sprintf("%d%02d%02dT%02d%02d%02d",
+		t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second())
+
+	return Note{
+		ID:          id,
+		Title:       title,
+		NoteType:    "permanent",
+		SubType:     SubType(subType),
+		CreatedAt:   &t,
+		UpdatedAt:   &t,
+		Slug:        slug,
+		Tags:        []*Tag{},
+		LinkedNotes: []*Note{},
+	}
 }

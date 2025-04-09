@@ -11,7 +11,14 @@ import (
 func WriteNoteFile(note model.Note, frontMatter string, body string, config model.Config) (string, error) {
 	content := fmt.Sprintf("---\n%s---\n\n%s", frontMatter, body)
 
-	dir := filepath.Join(config.BaseDir, "fleeting")
+	var dir string
+	if note.NoteType == "fleeting" {
+		dir = filepath.Join(config.BaseDir, "fleeting")
+	}
+	if note.NoteType == "permanent" {
+		dir = filepath.Join(config.BaseDir, "permanent")
+	}
+
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", fmt.Errorf("failed to create directory: %w", err)
 	}

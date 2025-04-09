@@ -7,16 +7,19 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/nakachan-ing/reflect-cli/config"
 	"github.com/nakachan-ing/reflect-cli/internal/noteio"
 	"github.com/nakachan-ing/reflect-cli/internal/reflectui"
 	"github.com/nakachan-ing/reflect-cli/internal/templateio"
 	"github.com/nakachan-ing/reflect-cli/model"
+	"github.com/nakachan-ing/reflect-cli/utils"
 	"github.com/spf13/cobra"
 )
 
 var interactive bool
+var reflectTitle string
 var reflectType string
 var reflectLanguage string
 
@@ -60,11 +63,39 @@ var reflectCmd = &cobra.Command{
 			if err != nil {
 				log.Printf("Error: %v\n", err)
 			}
-			fmt.Println("Reflect Responses:")
-			for i, q := range template.Prompts {
-				fmt.Printf("Q%d: %s\n", i+1, q)
-				fmt.Printf("A%d: %s\n\n", i+1, responses[i])
+
+			// ここにtitleのバリデーションを実装
+			slug, err := utils.Slugify(reflectTitle)
+			if err != nil {
+				// slugがなくてもファイル作成できるように Warningのみにしておく
+				log.Printf("Warning: %v\n", err)
 			}
+
+			perm := model.MapReflectToPermanent(reflectTitle, template.Type, slug, responses, config)
+
+			frontMatterBytes, err := model.MapFrontMatter(perm.Title, "permanent", string(perm.SubType), frontMatter.Source, frontMatter.LinkedIssue, frontMatter.Tags, filepath.Base(filePath))
+			if err != nil {
+				log.Printf("Error: %v\n", err)
+			}
+
+			body := templateio.BuildReflectBody(template, responses)
+
+			filePath, err := noteio.WriteNoteFile(perm, string(frontMatterBytes), body, *config)
+			if err != nil {
+				log.Printf("Error: %v\n", err)
+			}
+
+			fmt.Printf("\n🧠 Reflect completed! Review below:\n\n")
+
+			// 回答確認
+			for i, q := range template.Prompts {
+				fmt.Printf("Q%d: %s\nA%d: %s\n\n", i+1, q, i+1, responses[i])
+			}
+
+			// 保存完了通知
+			fmt.Printf("✅ Permanent note saved: %s\n", filepath.Base(filePath))
+			fmt.Printf("📁 Path: %s\n", filePath)
+
 		} else {
 			// 今はバッチ未対応、警告だけでOK
 			fmt.Println("Non-interactive mode is not supported yet. Use --interactive.")
@@ -79,6 +110,8 @@ func init() {
 
 	// options
 	reflectCmd.Flags().BoolVar(&interactive, "interactive", true, "Run in interactive prompt mode")
+	reflectCmd.Flags().StringVar(&reflectTitle, "title", "", "Specify title for the permanent note")
+	reflectCmd.MarkFlagRequired("title")
 	reflectCmd.Flags().StringVar(&reflectType, "type", "", "Specify note subtype (idea, question, ...)")
 	reflectCmd.Flags().StringVar(&reflectLanguage, "lang", "", "Specify language for prompts (e.g. ja, en)")
 
