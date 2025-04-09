@@ -2,6 +2,7 @@ package noteio
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -29,4 +30,16 @@ func ParseFrontMatter[T any](content string) (T, string, error) {
 	}
 
 	return frontMatter, body, nil
+}
+
+func UpdateFrontMatter[T any](frontMatter T, body string) string {
+	// Convert to YAML
+	frontMatterBytes, err := yaml.Marshal(frontMatter)
+	if err != nil {
+		log.Printf("❌ Failed to convert front matter to YAML: %v", err)
+		return body
+	}
+
+	// Preserve `---` and merge YAML with body
+	return fmt.Sprintf("---\n%s---\n\n%s", string(frontMatterBytes), body)
 }

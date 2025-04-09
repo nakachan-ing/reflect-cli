@@ -6,4 +6,5 @@ type Config struct {
 	Language       string `yaml:"language"`
 	ZettelJsonPath string `yaml:"zettelJsonPath"`
 	TagsJsonPath   string `yaml:"tagsJsonPath"`
+	Editor         string `yaml:"editor"`
 }

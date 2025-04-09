@@ -158,7 +158,7 @@ var newFleetingCmd = &cobra.Command{
 		}
 
 		// Jsonにデータ追加
-		newNote.FilePath = filePath
+		// newNote.FilePath = filePath
 		if err = jsonstore.InsertNoteToJson(newNote, config); err != nil {
 			utils.HandleZettelJsonError(err)
 		}
@@ -175,6 +175,10 @@ var newFleetingCmd = &cobra.Command{
 		///////////////////////////////////
 
 		// ノートを開く
+		err = utils.OpenEditor(filePath, *config)
+		if err != nil {
+			log.Printf("❌ Failed to open editor: %v\n", err)
+		}
 		//////////////////////////////////
 
 		// ノート編集後の情報に更新する
@@ -188,6 +192,7 @@ var newFleetingCmd = &cobra.Command{
 		if err != nil {
 			log.Printf("Error: %v\n", err)
 		}
+
 		//////////////////////////////////
 	},
 }
