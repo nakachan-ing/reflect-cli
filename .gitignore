@@ -2,9 +2,9 @@
 /reflect-cli
 *.exe
 *.out
-reflect
-reflect-mac
-reflect-linux
+zk
+zk-mac
+zk-linux
 
 # 依存関係キャッシュ
 /vendor/
