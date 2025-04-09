@@ -4,15 +4,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/nakachan-ing/reflect-cli/model"
+	"gopkg.in/yaml.v3"
 )
 
-func LoadFleetingTemplate(path string) (string, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return "", fmt.Errorf("failed to create template directory: %w", err)
-	}
-	templateContent, err := os.ReadFile(path)
+func LoadReflectTemplate(subtype, lang string, config model.Config) (*model.ReflectTemplate, error) {
+	path := filepath.Join(config.TemplateDir, "reflect", lang, fmt.Sprintf("%s.yaml", subtype))
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("failed to read template file (%s): %w", path, err)
+		return nil, err
 	}
-	return string(templateContent), nil
+
+	var tmpl model.ReflectTemplate
+	if err := yaml.Unmarshal(data, &tmpl); err != nil {
+		return nil, err
+	}
+	return &tmpl, nil
 }
