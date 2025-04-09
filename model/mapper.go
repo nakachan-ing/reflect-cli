@@ -91,21 +91,28 @@ func MapFrontMatter(title, noteType, subType, source, issue string, tags []strin
 	return frontMatterBytes, nil
 }
 
-func MapReflectToPermanent(title, subType, slug string, responses []string, config *Config) Note {
+func MapReflectToPermanent(title, subType, slug, source, issue string, notes []*Note, tags []*Tag, responses []string, config *Config) Note {
 	t := time.Now()
 	id := fmt.Sprintf("%d%02d%02dT%02d%02d%02d",
 		t.Year(), t.Month(), t.Day(),
 		t.Hour(), t.Minute(), t.Second())
 
 	return Note{
-		ID:          id,
-		Title:       title,
-		NoteType:    "permanent",
-		SubType:     SubType(subType),
-		CreatedAt:   &t,
-		UpdatedAt:   &t,
+		ID:        id,
+		Title:     title,
+		NoteType:  "permanent",
+		SubType:   SubType(subType),
+		CreatedAt: &t,
+		UpdatedAt: &t,
+		Archived:  false,
+		Deleted:   false,
+		Reflected: true,
+		// FilePath:    "",
 		Slug:        slug,
-		Tags:        []*Tag{},
+		Source:      source,
+		LinkedIssue: issue,
 		LinkedNotes: []*Note{},
+		Tags:        tags,
 	}
+
 }

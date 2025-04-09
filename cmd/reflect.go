@@ -12,6 +12,7 @@ import (
 	"github.com/nakachan-ing/reflect-cli/config"
 	"github.com/nakachan-ing/reflect-cli/internal/noteio"
 	"github.com/nakachan-ing/reflect-cli/internal/reflectui"
+	"github.com/nakachan-ing/reflect-cli/internal/store/jsonstore"
 	"github.com/nakachan-ing/reflect-cli/internal/templateio"
 	"github.com/nakachan-ing/reflect-cli/model"
 	"github.com/nakachan-ing/reflect-cli/utils"
@@ -71,7 +72,45 @@ var reflectCmd = &cobra.Command{
 				log.Printf("Warning: %v\n", err)
 			}
 
-			perm := model.MapReflectToPermanent(reflectTitle, template.Type, slug, responses, config)
+			existNotes, err := jsonstore.LoadNotes(*config)
+			if err != nil {
+				log.Printf("Error: %s", err)
+				os.Exit(1)
+			}
+
+			id, err := noteio.ExtractNoteID(filepath.Base(filePath))
+			if err != nil {
+				log.Printf("Error: %s", err)
+			}
+
+			var fleetingNotes []*model.Note
+			found := false
+			for i := range existNotes {
+				if existNotes[i].ID == id {
+					fleetingNotes = append(fleetingNotes, &existNotes[i])
+					found = true
+				}
+			}
+
+			if !found {
+				log.Printf("Note with ID %s not found", id)
+			}
+
+			existTags, err := jsonstore.LoadTags(*config)
+			if err != nil {
+				log.Printf("Error: %s", err)
+			}
+
+			var permTags []*model.Tag
+			for _, tag := range frontMatter.Tags {
+				for i := range existTags {
+					if existTags[i].Name == tag {
+						permTags = append(permTags, &existTags[i])
+					}
+				}
+			}
+
+			perm := model.MapReflectToPermanent(reflectTitle, template.Type, slug, frontMatter.Source, frontMatter.LinkedIssue, fleetingNotes, permTags, responses, config)
 
 			frontMatterBytes, err := model.MapFrontMatter(perm.Title, "permanent", string(perm.SubType), frontMatter.Source, frontMatter.LinkedIssue, frontMatter.Tags, filepath.Base(filePath))
 			if err != nil {
@@ -95,6 +134,10 @@ var reflectCmd = &cobra.Command{
 			// 保存完了通知
 			fmt.Printf("✅ Permanent note saved: %s\n", filepath.Base(filePath))
 			fmt.Printf("📁 Path: %s\n", filePath)
+
+			if err = jsonstore.InsertNoteToJson(perm, config); err != nil {
+				utils.HandleZettelJsonError(err)
+			}
 
 		} else {
 			// 今はバッチ未対応、警告だけでOK
