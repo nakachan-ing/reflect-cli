@@ -1,0 +1,10 @@
+type: idea
+title: アイデアのReflectテンプレート
+abstract_dimensions:
+  - 文脈
+  - 洞察
+  - 類似事例
+prompts:
+  - このアイデアが生まれた背景や文脈は？
+  - 本質的な洞察や原則は何か？
+  - 他に似たような事例はあるか？

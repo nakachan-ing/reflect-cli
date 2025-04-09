@@ -1,0 +1,10 @@
+type: literature
+title: 文献ノートのReflectテンプレート
+abstract_dimensions:
+  - 著者の意図
+  - 解釈・要約
+  - 応用可能性
+prompts:
+  - この文献で最も伝えたかったことは何か？
+  - どのように解釈・要約できるか？
+  - 自分の他の思考・タスクとどう結びつくか？

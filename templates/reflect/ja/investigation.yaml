@@ -1,0 +1,10 @@
+type: investigation
+title: 調査メモのReflectテンプレート
+abstract_dimensions:
+  - 原則
+  - 因果関係
+  - 応用可能性
+prompts:
+  - この調査対象はどのようなカテゴリに分類できますか？
+  - この経験から導かれる原則・教訓は？
+  - 同様の問題が起こり得る別の場面はありますか？

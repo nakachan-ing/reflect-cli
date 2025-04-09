@@ -1,0 +1,10 @@
+type: question
+title: 問いのReflectテンプレート
+abstract_dimensions:
+  - 背景
+  - 仮説
+  - 視点の展開
+prompts:
+  - なぜこの問いが生まれたのか？
+  - 自分なりの仮説や答えはあるか？
+  - 他に考えられる視点はあるか？
